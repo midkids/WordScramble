@@ -140,13 +140,15 @@ struct ContentView: View {
                 }
             }
             .navigationTitle(rootWord)
+            
             // onSubmit has to be given a function that:
             // - accepts no parameters
             // - returns nothing
             // our function addNewWord meets these criteria
-            .onSubmit {
-                addNewWord()
-            }
+            .onSubmit(addNewWord)
+            
+            // onAppear runs when this view is first shown
+            .onAppear(perform: startGame)
         }
     }
         
@@ -159,10 +161,32 @@ struct ContentView: View {
         
         // causes the answer to be listed
         // at the top of the list
+        // with Animation causes the words to slide into position
         withAnimation() {
             usedWords.insert(answer, at: 0)
         }
         newWord = ""
+    }
+    
+    func startGame() {
+        // get start.txt file
+        if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
+            // if it was found, turn into a string
+            if let startWords = try? String(contentsOf: startWordsURL, encoding: .utf8) {
+                // separate words into an array
+                let allWords = startWords.components(separatedBy: "\n")
+                // pick a random word from the array
+                // use nil coalescing in case array is empty
+                // default to "silkwork" if the array is empty
+                rootWord = allWords.randomElement() ?? "silkworm"
+                return
+            }
+        }
+        // if we get to here, something caused the start file not to be loaded
+        // into an array
+        // we will trigger a fatal crash and report a message back
+        fatalError("Could not load start.text file from bundle")
+        
     }
 }
 
