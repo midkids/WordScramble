@@ -17,6 +17,10 @@ struct ContentView: View {
     @State private var rootWord = ""
     @State private var newWord = ""
     
+    @State private var errorTitle = ""
+    @State private var errorMessage = ""
+    @State private var showingError = false
+    
     var body: some View {
         
         // This is all learning code
@@ -149,6 +153,12 @@ struct ContentView: View {
             
             // onAppear runs when this view is first shown
             .onAppear(perform: startGame)
+            // show alert on error of some type
+            .alert(errorTitle, isPresented: $showingError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
         
@@ -157,7 +167,25 @@ struct ContentView: View {
         // Make sure answer has at least one character
         guard answer.count > 0 else { return }
         
-        // more validation to come
+        // Make sure word not already submitted
+        guard isOriginal(word: answer) else {
+            wordError(title: "Word used already", message: "Be more orginal!")
+            return
+        }
+        
+        // Make sure submitted word can be spelled from the letters in the root word
+        guard isPossible(word: answer) else {
+            wordError(title: "Word not possible", message: "Must be able to spell this word from \(rootWord)!")
+            return
+        }
+        
+        //
+        guard isReal(word: answer) else {
+            wordError(title: "Word not in dictionary", message: "You cannot make up words!")
+            return
+        }
+        
+        
         
         // causes the answer to be listed
         // at the top of the list
@@ -177,7 +205,7 @@ struct ContentView: View {
                 let allWords = startWords.components(separatedBy: "\n")
                 // pick a random word from the array
                 // use nil coalescing in case array is empty
-                // default to "silkwork" if the array is empty
+                // default to "silkworm" if the array is empty
                 rootWord = allWords.randomElement() ?? "silkworm"
                 return
             }
@@ -186,7 +214,39 @@ struct ContentView: View {
         // into an array
         // we will trigger a fatal crash and report a message back
         fatalError("Could not load start.text file from bundle")
-        
+    }
+    
+    // check to see if word had already been submitted (used)
+    func isOriginal(word: String) -> Bool {
+        !usedWords.contains(word)
+    }
+    
+    // make sure the submitted word can be spelled from the
+    // letters in the root word
+    func isPossible(word: String) -> Bool {
+        var tempWord = rootWord
+        for letter in word {
+            if let pos = tempWord.firstIndex(of: letter) {
+                tempWord.remove(at: pos)
+            } else {
+                return false
+            }
+        }
+        return true
+    }
+    
+    // check to make sure submitted word is a real word
+    func isReal(word: String) -> Bool {
+        let checker = UITextChecker()
+        let range = NSRange(location: 0, length: word.utf16.count)
+        let misspelledRange = checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0, wrap: false, language: "en")
+        return misspelledRange.location == NSNotFound
+    }
+    
+    func wordError(title: String, message: String) {
+        errorTitle = title
+        errorMessage = message
+        showingError = true
     }
 }
 
