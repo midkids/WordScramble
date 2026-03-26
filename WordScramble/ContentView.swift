@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var usedWords = [String]()
     @State private var rootWord = ""
     @State private var newWord = ""
+    @State private var score = 0
     
     @State private var errorTitle = ""
     @State private var errorMessage = ""
@@ -128,6 +129,11 @@ struct ContentView: View {
         
         // Project 5
         NavigationStack() {
+            Section {
+                Text("Root Word: \(rootWord)")
+                    .fontWeight(.bold)
+            }
+            
             List {
                 Section {
                     TextField("Enter your word", text: $newWord)
@@ -143,7 +149,12 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle(rootWord)
+            .navigationTitle("Word Scramble")
+            
+            .toolbar {
+                Button("Reset", action: startGame)
+                    .foregroundColor(.blue)
+            }
             
             // onSubmit has to be given a function that:
             // - accepts no parameters
@@ -164,8 +175,15 @@ struct ContentView: View {
         
     func addNewWord() {
         let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        
         // Make sure answer has at least one character
         guard answer.count > 0 else { return }
+        
+        // Answer must have at least three characters
+        guard answer.count >= 3 else {
+            wordError(title: "Word must have at least three characters", message: "Think big!")
+            return
+        }
         
         // Make sure word not already submitted
         guard isOriginal(word: answer) else {
@@ -181,11 +199,9 @@ struct ContentView: View {
         
         //
         guard isReal(word: answer) else {
-            wordError(title: "Word not in dictionary", message: "You cannot make up words!")
+            wordError(title: "Word not in dictionary", message: "You cannot make up words!  ")
             return
         }
-        
-        
         
         // causes the answer to be listed
         // at the top of the list
@@ -197,6 +213,7 @@ struct ContentView: View {
     }
     
     func startGame() {
+        score = 0
         // get start.txt file
         if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
             // if it was found, turn into a string
