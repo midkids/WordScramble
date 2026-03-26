@@ -132,6 +132,7 @@ struct ContentView: View {
             Section {
                 Text("Root Word: \(rootWord)")
                     .fontWeight(.bold)
+                Text("Score: \(score)")
             }
             
             List {
@@ -208,12 +209,15 @@ struct ContentView: View {
         // with Animation causes the words to slide into position
         withAnimation() {
             usedWords.insert(answer, at: 0)
+            score = score + (answer.count * usedWords.count)
         }
         newWord = ""
     }
     
     func startGame() {
         score = 0
+        newWord = ""
+        usedWords.removeAll()
         // get start.txt file
         if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
             // if it was found, turn into a string
