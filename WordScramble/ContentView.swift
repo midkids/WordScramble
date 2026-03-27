@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var errorTitle = ""
     @State private var errorMessage = ""
     @State private var showingError = false
+    @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
         
@@ -139,6 +140,7 @@ struct ContentView: View {
                 Section {
                     TextField("Enter your word", text: $newWord)
                         .textInputAutocapitalization(.never)
+                        .focused($isTextFieldFocused)
                 }
                 Section {
                     ForEach(usedWords, id: \.self) {
@@ -165,6 +167,7 @@ struct ContentView: View {
             
             // onAppear runs when this view is first shown
             .onAppear(perform: startGame)
+            .onAppear { isTextFieldFocused = true }
             // show alert on error of some type
             .alert(errorTitle, isPresented: $showingError) {
                 Button("OK") { }
@@ -212,11 +215,13 @@ struct ContentView: View {
             score = score + (answer.count * usedWords.count)
         }
         newWord = ""
+        isTextFieldFocused = true
     }
     
     func startGame() {
         score = 0
         newWord = ""
+        isTextFieldFocused = true
         usedWords.removeAll()
         // get start.txt file
         if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
